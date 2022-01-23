@@ -7,6 +7,7 @@ const getSupabase = (access_token) => {
   );
 
   if (access_token) {
+    console.log({ access_token });
     supabase.auth.session = () => ({
       access_token,
     });

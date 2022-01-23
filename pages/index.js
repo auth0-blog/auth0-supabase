@@ -1,38 +1,92 @@
-import styles from "../styles/Home.module.css";
-import { withPageAuthRequired, getSession } from "@auth0/nextjs-auth0";
-import { getSupabase } from "../utils/supabase";
+import { useEffect, useState } from "react";
+import { useAuth0 } from "@auth0/auth0-react";
+// import { withPageAuthRequired, getSession } from "@auth0/nextjs-auth0";
 import Link from "next/link";
-import { useState } from "react";
 
-const Index = ({ user, todos }) => {
+import styles from "../styles/Home.module.css";
+import { getSupabase } from "../utils/supabase";
+
+const LoginWithRedirectButton = () => {
+  const { loginWithRedirect } = useAuth0();
+
+  return <button onClick={() => loginWithRedirect()}>Log In (redirect)</button>;
+};
+
+const LoginWithPopupButton = () => {
+  const { loginWithPopup } = useAuth0();
+
+  return <button onClick={() => loginWithPopup()}>Log In (popup)</button>;
+};
+
+const LogoutButton = () => {
+  const { logout } = useAuth0();
+
+  return (
+    <button onClick={() => logout({ returnTo: window.location.origin })}>
+      Log Out
+    </button>
+  );
+};
+
+const Profile = () => {
+  const { user, isAuthenticated, isLoading } = useAuth0();
+
+  if (isLoading) {
+    return <div>Loading ...</div>;
+  }
+
+  return (
+    isAuthenticated && (
+      <div>
+        <img src={user.picture} alt={user.name} />
+        <h2>{user.name}</h2>
+        <p>{user.email}</p>
+      </div>
+    )
+  );
+};
+
+const Index = () => {
+  const { user } = useAuth0();
+
   const [content, setContent] = useState("");
-  const [allTodos, setAllTodos] = useState([...todos]);
+  const [todos, setTodos] = useState([]);
+
+  useEffect(() => {
+    const fetchTodos = async () => {
+      const { data } = await getSupabase(user?.sub).from("todo").select("*");
+      setTodos(data);
+    };
+
+    fetchTodos();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const supabase = getSupabase(user.accessToken);
-    const resp = await supabase
+
+    const resp = await getSupabase(user?.sub)
       .from("todo")
       .insert({ content, user_id: user.sub });
 
-    setAllTodos([...todos, resp.data[0]]);
+    setTodos([...todos, resp.data[0]]);
     setContent("");
   };
 
   return (
     <div className={styles.container}>
-      <p>
-        Welcome {user.name}!{" "}
-        <Link href="/api/auth/logout">
+      <Profile />
+      <LoginWithRedirectButton />
+      <LoginWithPopupButton />
+      <LogoutButton />
+      {/* <Link href="/api/auth/logout">
           <a>Logout</a>
-        </Link>
-      </p>
+        </Link> */}
       <form onSubmit={handleSubmit}>
         <input onChange={(e) => setContent(e.target.value)} value={content} />
         <button>Add</button>
       </form>
-      {allTodos?.length > 0 ? (
-        allTodos.map((todo) => <p key={todo.id}>{todo.content}</p>)
+      {todos?.length > 0 ? (
+        todos.map((todo) => <p key={todo.id}>{todo.content}</p>)
       ) : (
         <p>You have completed all todos!</p>
       )}
@@ -40,20 +94,22 @@ const Index = ({ user, todos }) => {
   );
 };
 
-export const getServerSideProps = withPageAuthRequired({
-  async getServerSideProps({ req, res }) {
-    const {
-      user: { accessToken },
-    } = await getSession(req, res);
+// export const getServerSideProps = withPageAuthRequired({
+//   async getServerSideProps({ req, res }) {
+//     const {
+//       user: { accessToken },
+//     } = await getSession(req, res);
 
-    const supabase = getSupabase(accessToken);
+//     const supabase = getSupabase(accessToken);
 
-    const { data: todos } = await supabase.from("todo").select("*");
+//     const select = await supabase.from("todo").select("*");
 
-    return {
-      props: { todos },
-    };
-  },
-});
+//     console.log({ accessToken, select });
+
+//     return {
+//       props: { todos: select.data?.todos ?? [] },
+//     };
+//   },
+// });
 
 export default Index;
