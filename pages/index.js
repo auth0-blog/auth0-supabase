@@ -46,11 +46,9 @@ const Index = () => {
   const [content, setContent] = useState("");
   const [todos, setTodos] = useState([]);
 
-  const supabase = getSupabase(user?.accessToken);
-
   useEffect(() => {
     const fetchTodos = async () => {
-      const { data } = await supabase.from("todo").select("*");
+      const { data } = await getSupabase(user?.sub).from("todo").select("*");
       setTodos(data);
     };
 
@@ -60,7 +58,7 @@ const Index = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const resp = await supabase
+    const resp = await getSupabase(user?.sub)
       .from("todo")
       .insert({ content, user_id: user.sub });
 
