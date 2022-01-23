@@ -1,11 +1,16 @@
 import React from "react";
-import { UserProvider } from "@auth0/nextjs-auth0";
+import { Auth0Provider } from "@auth0/auth0-react";
+// import { UserProvider } from "@auth0/nextjs-auth0";
 
 const App = ({ Component, pageProps }) => {
   return (
-    <UserProvider>
+    <Auth0Provider
+      domain="hunch-dev.us.auth0.com"
+      clientId="XBR4DuNwF6JhB9TDMzxXzdXiG0coVuJt"
+      redirectUri="http://localhost:3000"
+    >
       <Component {...pageProps} />
-    </UserProvider>
+    </Auth0Provider>
   );
 };
 

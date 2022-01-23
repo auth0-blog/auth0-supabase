@@ -1,15 +1,52 @@
 import { useEffect, useState } from "react";
-
-import styles from "../styles/Home.module.css";
-import { withPageAuthRequired, getSession } from "@auth0/nextjs-auth0";
-import { getSupabase } from "../utils/supabase";
+import { useAuth0 } from "@auth0/auth0-react";
+// import { withPageAuthRequired, getSession } from "@auth0/nextjs-auth0";
 import Link from "next/link";
 
-const Index = withPageAuthRequired(({ user }) => {
+import styles from "../styles/Home.module.css";
+import { getSupabase } from "../utils/supabase";
+
+const LoginButton = () => {
+  const { loginWithRedirect } = useAuth0();
+
+  return <button onClick={() => loginWithRedirect()}>Log In</button>;
+};
+
+const LogoutButton = () => {
+  const { logout } = useAuth0();
+
+  return (
+    <button onClick={() => logout({ returnTo: window.location.origin })}>
+      Log Out
+    </button>
+  );
+};
+
+const Profile = () => {
+  const { user, isAuthenticated, isLoading } = useAuth0();
+
+  if (isLoading) {
+    return <div>Loading ...</div>;
+  }
+
+  return (
+    isAuthenticated && (
+      <div>
+        <img src={user.picture} alt={user.name} />
+        <h2>{user.name}</h2>
+        <p>{user.email}</p>
+      </div>
+    )
+  );
+};
+
+const Index = () => {
+  const { user } = useAuth0();
+
   const [content, setContent] = useState("");
   const [todos, setTodos] = useState([]);
 
-  const supabase = getSupabase(user.accessToken);
+  const supabase = getSupabase(user?.accessToken);
 
   useEffect(() => {
     const fetchTodos = async () => {
@@ -33,12 +70,12 @@ const Index = withPageAuthRequired(({ user }) => {
 
   return (
     <div className={styles.container}>
-      <p>
-        Welcome {user.name}!{" "}
-        <Link href="/api/auth/logout">
+      <Profile />
+      <LoginButton />
+      <LogoutButton />
+      {/* <Link href="/api/auth/logout">
           <a>Logout</a>
-        </Link>
-      </p>
+        </Link> */}
       <form onSubmit={handleSubmit}>
         <input onChange={(e) => setContent(e.target.value)} value={content} />
         <button>Add</button>
@@ -50,7 +87,7 @@ const Index = withPageAuthRequired(({ user }) => {
       )}
     </div>
   );
-});
+};
 
 // export const getServerSideProps = withPageAuthRequired({
 //   async getServerSideProps({ req, res }) {
