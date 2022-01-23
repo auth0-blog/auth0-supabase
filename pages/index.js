@@ -1,21 +1,33 @@
+import { useEffect, useState } from "react";
+
 import styles from "../styles/Home.module.css";
 import { withPageAuthRequired, getSession } from "@auth0/nextjs-auth0";
 import { getSupabase } from "../utils/supabase";
 import Link from "next/link";
-import { useState } from "react";
 
-const Index = ({ user, todos }) => {
+const Index = withPageAuthRequired(({ user }) => {
   const [content, setContent] = useState("");
-  const [allTodos, setAllTodos] = useState([...todos]);
+  const [todos, setTodos] = useState([]);
+
+  const supabase = getSupabase(user.accessToken);
+
+  useEffect(() => {
+    const fetchTodos = async () => {
+      const { data } = await supabase.from("todo").select("*");
+      setTodos(data);
+    };
+
+    fetchTodos();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const supabase = getSupabase(user.accessToken);
+
     const resp = await supabase
       .from("todo")
       .insert({ content, user_id: user.sub });
 
-    setAllTodos([...todos, resp.data[0]]);
+    setTodos([...todos, resp.data[0]]);
     setContent("");
   };
 
@@ -31,29 +43,31 @@ const Index = ({ user, todos }) => {
         <input onChange={(e) => setContent(e.target.value)} value={content} />
         <button>Add</button>
       </form>
-      {allTodos?.length > 0 ? (
-        allTodos.map((todo) => <p key={todo.id}>{todo.content}</p>)
+      {todos?.length > 0 ? (
+        todos.map((todo) => <p key={todo.id}>{todo.content}</p>)
       ) : (
         <p>You have completed all todos!</p>
       )}
     </div>
   );
-};
-
-export const getServerSideProps = withPageAuthRequired({
-  async getServerSideProps({ req, res }) {
-    const {
-      user: { accessToken },
-    } = await getSession(req, res);
-
-    const supabase = getSupabase(accessToken);
-
-    const { data: todos } = await supabase.from("todo").select("*");
-
-    return {
-      props: { todos },
-    };
-  },
 });
+
+// export const getServerSideProps = withPageAuthRequired({
+//   async getServerSideProps({ req, res }) {
+//     const {
+//       user: { accessToken },
+//     } = await getSession(req, res);
+
+//     const supabase = getSupabase(accessToken);
+
+//     const select = await supabase.from("todo").select("*");
+
+//     console.log({ accessToken, select });
+
+//     return {
+//       props: { todos: select.data?.todos ?? [] },
+//     };
+//   },
+// });
 
 export default Index;
