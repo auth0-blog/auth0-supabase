@@ -7,9 +7,10 @@ import styles from "../styles/Home.module.css";
 import { getSupabase } from "../utils/supabase";
 
 const LoginButton = () => {
-  const { loginWithRedirect } = useAuth0();
+  const { loginWithRedirect, loginWithPopup } = useAuth0();
 
-  return <button onClick={() => loginWithRedirect()}>Log In</button>;
+  // return <button onClick={() => loginWithRedirect()}>Log In</button>;
+  return <button onClick={() => loginWithPopup()}>Log In</button>;
 };
 
 const LogoutButton = () => {
