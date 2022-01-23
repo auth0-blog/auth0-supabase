@@ -6,11 +6,16 @@ import Link from "next/link";
 import styles from "../styles/Home.module.css";
 import { getSupabase } from "../utils/supabase";
 
-const LoginButton = () => {
-  const { loginWithRedirect, loginWithPopup } = useAuth0();
+const LoginWithRedirectButton = () => {
+  const { loginWithRedirect } = useAuth0();
 
-  // return <button onClick={() => loginWithRedirect()}>Log In</button>;
-  return <button onClick={() => loginWithPopup()}>Log In</button>;
+  return <button onClick={() => loginWithRedirect()}>Log In (redirect)</button>;
+};
+
+const LoginWithPopupButton = () => {
+  const { loginWithPopup } = useAuth0();
+
+  return <button onClick={() => loginWithPopup()}>Log In (popup)</button>;
 };
 
 const LogoutButton = () => {
@@ -70,7 +75,8 @@ const Index = () => {
   return (
     <div className={styles.container}>
       <Profile />
-      <LoginButton />
+      <LoginWithRedirectButton />
+      <LoginWithPopupButton />
       <LogoutButton />
       {/* <Link href="/api/auth/logout">
           <a>Logout</a>
